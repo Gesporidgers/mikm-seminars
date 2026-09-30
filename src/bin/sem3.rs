@@ -3,6 +3,7 @@ use std::io;
 use csv::WriterBuilder;
 use serde::Serialize;
 
+#[derive(Debug)]
 enum Function {
     X2,
     X3,
@@ -24,8 +25,8 @@ impl Function {
 
     fn derivative(&self, x: f64) -> f64 {
         match self {
-            Function::X2 => 2 * x,
-            Function::X3 => 3 * x,
+            Function::X2 => 2. * x,
+            Function::X3 => 3. * x,
             Function::Sin => x.cos(),
             Function::Cos => -x.sin(),
             Function::Exp => x.exp()
@@ -57,7 +58,23 @@ fn main() {
 
     let mut index: u8 = 1;
     for h in [0.1, 0.01, 0.001] {
-        let right_difference = (fx.calculate(x+h) - fx.calculate(x)) / h;
+        let mut wtr = WriterBuilder::new()
+                      .from_path(format!("sem3/out_{:?}_{index}.csv",fx).as_str()).unwrap();
+        wtr.write_record(["Метод", "Производная", "Абсолютная погрешность"]).unwrap();
 
+        let right_difference = (fx.calculate(x+h) - fx.calculate(x)) / h;
+        let left_difference = (fx.calculate(x) - fx.calculate(x - h)) / h;
+        let center_difference = (fx.calculate(x + h) - fx.calculate(x - h)) / (2. * h);
+        
+        let delta1 = (right_difference - fx.derivative(x)).abs();
+        let delta2 = (left_difference - fx.derivative(x)).abs();
+        let delta3 = (center_difference - fx.derivative(x)).abs();
+        
+        wtr.write_record(["Правая разность", right_difference.to_string().as_str(), delta1.to_string().as_str()]).unwrap();
+        wtr.write_record(["Левая разность", left_difference.to_string().as_str(), delta2.to_string().as_str()]).unwrap();
+        wtr.write_record(["Центральная разность", center_difference.to_string().as_str(), delta3.to_string().as_str()]).unwrap();
+        wtr.write_record(["Точное значение", fx.derivative(x).to_string().as_str(), "-"]).unwrap();
+
+        index += 1;
     }
 }
