@@ -26,7 +26,7 @@ impl Function {
     fn derivative(&self, x: f64) -> f64 {
         match self {
             Function::X2 => 2. * x,
-            Function::X3 => 3. * x,
+            Function::X3 => 3. * x * x,
             Function::Sin => x.cos(),
             Function::Cos => -x.sin(),
             Function::Exp => x.exp()
